@@ -1,0 +1,152 @@
+---
+title: "Applied Multivariate Data Analysis"
+author: "Cristel Kaye Billones"
+output: pdf_document
+---
+
+## Formative Assessment 5
+
+```{r load libraries, message=FALSE, warning=FALSE}
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+
+```{r load dataset}
+file_path <- "C:/Users/Cipher/Desktop/AMDA/employee_attrition_train.csv"
+# Load the dataset
+df <- read_csv(file_path)
+# View the first few rows of the dataset
+head(df)
+colnames(df)
+``` 
+
+```{r}
+# Drop rows with any missing values
+df_clean <- df %>% drop_na()
+# Check the cleaned data
+summary(df_clean)
+
+# Ensure JobSatisfaction is treated as a factor
+df_clean$JobSatisfaction <- as.factor(df_clean$JobSatisfaction)
+
+# Perform MANOVA, handling missing data with na.omit
+manova_test <- manova(cbind(Age, DailyRate, MonthlyIncome) ~ JobSatisfaction, data = df_clean, na.action = na.omit)
+
+# Wilks' Lambda for overall significance
+manova_wilks <- summary(manova_test, test = "Wilks")
+
+# Follow-up ANOVAs for each dependent variable
+anova_results <- summary.aov(manova_test)
+
+# Create a table for the results
+result_table <- data.frame(
+  Dependent_Variable = c("Age", "Daily Rate", "Monthly Income"),
+  MANOVA_p_value = c(manova_wilks$stats[1, "Pr(>F)"]),
+  ANOVA_p_value = c(anova_results[[1]]$`Pr(>F)`[1], 
+                    anova_results[[2]]$`Pr(>F)`[1], 
+                    anova_results[[3]]$`Pr(>F)`[1]),
+  Interpretation = c("No significant effect of job satisfaction on age.",
+                     "No significant effect of job satisfaction on daily rate.",
+                     "No significant effect of job satisfaction on monthly income.")
+)
+
+# Print the table
+print(result_table)
+```
+\vspace{5mm}
+
+### Interpretation of Results
+
+ **1.** The results from the MANOVA and subsequent ANOVAs suggest that job satisfaction levels do not have a significant effect on employees' age, daily rate, or monthly income. The overall MANOVA test shows no significant difference between the groups with a p-value of 0.6245. Furthermore, the individual ANOVA tests for each dependent variable—age (p = 0.8953), daily rate (p = 0.1302), and monthly income (p = 0.9048)—also fail to show any statistically significant differences across the levels of job satisfaction. Therefore, the analysis concludes that job satisfaction does not significantly impact these factors in this dataset.
+
+ **2.** The ANOVA result for age across different job satisfaction levels shows no significant difference, with a p-value of 0.8953, indicating that age does not vary significantly with job satisfaction levels.
+
+ **3.** The ANOVA result for daily rate across different job satisfaction levels shows a p-value of 0.1302, which is greater than the typical significance level of 0.05, indicating that there is no significant difference in daily rate across job satisfaction levels.
+
+ **4.** The ANOVA result for monthly income across different job satisfaction levels shows a p-value of 0.9048, which is much higher than the typical significance level of 0.05, indicating that there is no significant difference in monthly income across job satisfaction levels.
+
+ **5.** Based on the ANOVA results, none of the dependent variables (age, daily rate, or monthly income) show significant differences across job satisfaction levels. However, if we look at the p-values, daily rate (p = 0.1302) is the closest to being significant, though still not significant at the 0.05 level, suggesting it might contribute slightly more to the differences between job satisfaction levels compared to age (p = 0.8953) and monthly income (p = 0.9048).
+
+ **6.** The MANOVA results show no significant interactions or patterns in the relationships between age, daily rate, and monthly income when grouped by job satisfaction levels, as indicated by the lack of significant results in both the Wilks' Lambda test (p = 0.6245) and the individual ANOVAs for each dependent variable.
+
+\newpage
+
+```{r}
+# 1. Pearson Correlation Test between Age, DailyRate, and MonthlyIncome
+# Checking correlation between continuous variables
+cor_test_age_daily <- cor.test(df$Age, df$DailyRate, method = "pearson")
+cor_test_age_income <- cor.test(df$Age, df$MonthlyIncome, method = "pearson")
+cor_test_daily_income <- cor.test(df$DailyRate, df$MonthlyIncome, method = "pearson")
+
+# Print Pearson correlation results
+print(cor_test_age_daily)
+print(cor_test_age_income)
+print(cor_test_daily_income)
+
+# 2. Kruskal-Wallis Test for non-parametric comparison across job satisfaction levels
+kruskal_age <- kruskal.test(Age ~ JobSatisfaction, data = df)
+kruskal_daily_rate <- kruskal.test(DailyRate ~ JobSatisfaction, data = df)
+kruskal_monthly_income <- kruskal.test(MonthlyIncome ~ JobSatisfaction, data = df)
+
+# Print Kruskal-Wallis results
+print(kruskal_age)
+print(kruskal_daily_rate)
+print(kruskal_monthly_income)
+
+``` 
+
+
+\newpage
+
+\vspace{5mm}
+These interpretations are aligned with the output in the `result_table`, showing the correct p-values and their corresponding meanings.
+
+\vspace{5mm}
+
+### Supporting test using pearson correlation and kruskal:
+
+1. **Do different levels of job satisfaction affect employees’ age, daily rate, and monthly income?**
+   - The Pearson correlation and Kruskal-Wallis tests suggest that job satisfaction levels do not significantly affect age, daily rate, or monthly income, as there are no significant correlations or differences found.
+
+2. **Is there a significant difference in age across different job satisfaction levels?**
+   - The Kruskal-Wallis test for age shows no significant difference across job satisfaction levels, with a p-value of 0.9624, indicating no notable variation.
+
+3. **Is there a significant difference in daily rate across different job satisfaction levels?**
+   - The Kruskal-Wallis test for daily rate shows a p-value of 0.1665, suggesting that job satisfaction levels do not significantly affect daily rates.
+
+4. **Is there a significant difference in monthly income across different job satisfaction levels?**
+   - The Kruskal-Wallis test for monthly income shows a p-value of 0.9927, indicating no significant differences in monthly income across job satisfaction levels.
+
+5. **Which of the dependent variables (age, daily rate, or monthly income) contributes most to the differences between job satisfaction levels?**
+   - None of the dependent variables (age, daily rate, or monthly income) show significant contributions to differences in job satisfaction levels, as supported by both the Pearson correlation and Kruskal-Wallis test results.
+
+6. **Are there any interactions or patterns in the relationships between age, daily rate, and monthly income when grouped by job satisfaction levels?**
+   - The Pearson correlation results show weak correlations between variables, and the Kruskal-Wallis tests show no significant differences, indicating no clear interactions or patterns in the relationships between age, daily rate, and monthly income based on job satisfaction levels.
+   
+\newpage
+
+### Combining the results of MANOVA, ANOVA, PEARSON, AND KRUSKAL.
+
+Here are the updated explanations, incorporating the results from the Pearson correlation and Kruskal-Wallis tests:
+
+1. **Overall MANOVA and ANOVA Results**:
+The results from the MANOVA and subsequent ANOVAs suggest that job satisfaction levels do not have a significant effect on employees' age, daily rate, or monthly income. The overall MANOVA test, as indicated by Wilks' Lambda, shows no significant difference between the groups (p = 0.6245). Furthermore, the individual ANOVA tests for each dependent variable—age (p = 0.8953), daily rate (p = 0.1302), and monthly income (p = 0.9048)—also fail to show any statistically significant differences across the levels of job satisfaction. Therefore, the analysis concludes that job satisfaction does not significantly impact these factors in this dataset.
+
+2. **Age Across Job Satisfaction Levels**:
+The ANOVA result for age across different job satisfaction levels shows no significant difference, with a p-value of 0.8953, indicating that age does not vary significantly with job satisfaction levels. Additionally, the Kruskal-Wallis test confirms this result, with a p-value of 0.9624, suggesting that there are no significant differences in age across job satisfaction levels using a non-parametric approach.
+
+3. **Daily Rate Across Job Satisfaction Levels**:
+The ANOVA result for daily rate across different job satisfaction levels shows a p-value of 0.1302, which is greater than the typical significance level of 0.05, indicating that there is no significant difference in daily rate across job satisfaction levels. The Kruskal-Wallis test results support this, with a p-value of 0.1665, further confirming that job satisfaction does not significantly affect daily rate.
+
+4. **Monthly Income Across Job Satisfaction Levels**:
+The ANOVA result for monthly income across different job satisfaction levels shows a p-value of 0.9048, which is much higher than the typical significance level of 0.05, indicating that there is no significant difference in monthly income across job satisfaction levels. Similarly, the Kruskal-Wallis test shows a p-value of 0.9927, further supporting the conclusion that job satisfaction has no significant impact on monthly income.
+
+5. **Contributions of Dependent Variables**:
+Based on the ANOVA results, none of the dependent variables (age, daily rate, or monthly income) show significant differences across job satisfaction levels. However, the Pearson correlation test results provide additional insight. The correlation between **Age** and **DailyRate** is very weak, with a correlation coefficient of 0.0238 and a p-value of 0.4824, indicating no significant linear relationship. The correlation between **Age** and **MonthlyIncome** is moderate, with a correlation coefficient of 0.4924 and a highly significant p-value (< 2.2e-16), suggesting a moderate positive relationship. The correlation between **DailyRate** and **MonthlyIncome** is also weak, with a correlation coefficient of 0.0231 and a p-value of 0.4660, indicating no significant linear relationship. While **Age** and **MonthlyIncome** have a moderate correlation, no variables show significant differences across job satisfaction levels in either the ANOVA or Kruskal-Wallis tests.
+
+6. **Interactions and Patterns**:
+The MANOVA results show no significant interactions or patterns in the relationships between age, daily rate, and monthly income when grouped by job satisfaction levels, as indicated by the lack of significant results in both the Wilks' Lambda test (p = 0.6245) and the individual ANOVAs for each dependent variable. The Pearson correlation results further support this, as there are no significant linear relationships between the variables (except for a moderate correlation between age and monthly income). The Kruskal-Wallis tests also show no significant differences in the distributions of the variables across job satisfaction levels, with p-values of 0.9624 for age, 0.1665 for daily rate, and 0.9927 for monthly income, reinforcing the conclusion that there are no patterns or significant interactions between the variables when grouped by job satisfaction.
+
